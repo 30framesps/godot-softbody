@@ -1,8 +1,12 @@
-# poser-softbody
+# godot-softbody
 
 A CPU softbody deformation addon for **Godot 4 (C#)** built for skinned characters. It re-simulates a mesh surface with Verlet integration and edge constraints, keeps vertices pinned to their skinned/blend-shaped rest pose via goal weights, collides the softbody against primitive proxies, and reconstructs a smooth render mesh each frame.
 
-Originally developed for the PoserApp character posing tool and extracted as a standalone addon.
+It is project-agnostic — any Godot .NET project can use it for soft-tissue, cloth or secondary-motion deformation on skinned meshes.
+
+## Tested on
+
+Developed and battle-tested in **PoserApp**, a Godot 4 (.NET) character posing application (skinned characters, `Skeleton3D`-driven rest poses, Jolt Physics), where it drives deforming soft surfaces on animated actors. It is not tied to PoserApp, however, and contains no application-specific code.
 
 ## Features
 
@@ -19,13 +23,13 @@ Originally developed for the PoserApp character posing tool and extracted as a s
 ## Requirements
 
 - Godot **4.4+** with **.NET** support (developed against Godot 4.7 / `net8.0`).
-- A project using C# (`Godot.NET.Sdk`). Jolt Physics is not required but is what the reference app uses.
+- A project using C# (`Godot.NET.Sdk`). Any physics engine works; the PoserApp test project uses Jolt Physics.
 
 ## Installation
 
-1. Copy `addons/poser-softbody` into your project's `addons/` directory.
+1. Copy `addons/godot-softbody` into your project's `addons/` directory.
 2. Build your C# project (the classes compile into your game assembly).
-3. Optionally enable **Poser SoftBody** under *Project → Project Settings → Plugins*. (Not strictly required for runtime use — the nodes are `[GlobalClass]` and register on compile — but it makes the addon visible in the plugin list.)
+3. Optionally enable **Godot SoftBody** under *Project → Project Settings → Plugins*. (Not strictly required for runtime use — the nodes are `[GlobalClass]` and register on compile — but it makes the addon visible in the plugin list.)
 
 ## Quick start
 
@@ -62,21 +66,21 @@ When colliders are added/removed at runtime, call `RebuildColliders()` (immediat
 | `ResetSimulation()` | Re-pins the simulation to the current rest pose and clears velocities. |
 | `RebuildColliders()` / `QueueColliderRebuild()` | Rebuild the collider proxy list immediately / deferred. |
 | `ActiveColliderCount` | Number of collider proxies currently in effect. |
-| `SetActorActive(bool active)` | Combined with `SimulateWhenInactive`, controls whether the node keeps simulating when the owning actor is disabled. |
+| `SetActorActive(bool active)` | Combined with `SimulateWhenInactive`, controls whether the node keeps simulating when the owning actor/host is disabled. |
 | `SoftBodyEnvironment.Force` / `SetForce()` / `ForceChanged` | Global external force shared by all instances. |
 
-## Migrating from the inline PoserApp version
+## Migrating from an inline copy (e.g. the original PoserApp scripts)
 
 The addon is API-compatible except for three intentional decouplings:
 
-1. **`EnvironmentPhysics.Force` → `SoftBodyEnvironment.Force`**
-   PoserApp's `EnvironmentPhysics` also pushed the force into `SpringBoneSimulator3D`s; the addon deliberately only affects softbodies. Keep your own spring-bone force logic if you need it, and call `SoftBodyEnvironment.SetForce` alongside `EnvironmentPhysics.SetForce` during the transition.
+1. **App-specific global force → `SoftBodyEnvironment.Force`**
+   If your app had its own global physics-force singleton (in PoserApp: `EnvironmentPhysics.Force`, which also fed `SpringBoneSimulator3D`s), call `SoftBodyEnvironment.SetForce` alongside it during the transition. The addon deliberately only affects softbodies.
 2. **Actor collider auto-collection removed.**
-   The old code scanned `ActorManager` for "primitive" actor colliders. Use `AdditionalColliderRoots` pointing at your primitives root, or keep calling `RebuildColliders()` when actors are added/removed (`ActorAdded`/`ActorRemoved` signals).
+   The PoserApp original scanned its `ActorManager` for "primitive" actor colliders. Use `AdditionalColliderRoots` pointing at your primitives root, or call `RebuildColliders()` whenever your own collider set changes (e.g. on actor add/remove).
 3. **Output mesh parenting.**
-   The generated output `MeshInstance3D` is attached to the deform node's parent (or the deform node itself if parentless) instead of the owning `Actor`.
+   The generated output `MeshInstance3D` is attached to the deform node's parent (or the deform node itself if parentless) instead of a custom owning-actor node type.
 
-`.uid` files are kept from the original project, so scenes serialized against the old script paths can be re-pointed at `res://addons/poser-softbody/SoftBodyDeform.cs` without losing script references.
+`.uid` files are kept from the original project, so scenes serialized against old script paths can be re-pointed at `res://addons/godot-softbody/SoftBodyDeform.cs` without losing script references.
 
 ## Notes & caveats
 

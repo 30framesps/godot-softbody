@@ -4,7 +4,7 @@ using Godot;
 /// <summary>
 /// Global environment forces applied to every <see cref="SoftBodyDeform"/> instance.
 /// Useful for wind, gravity overrides or impulse fields shared across a scene.
-/// PoserSoftBody reads <see cref="Force"/> once per simulation step; the per-node
+/// The <see cref="SoftBodyDeform"/> simulation reads <see cref="Force"/> once per step; the per-node
 /// <see cref="SoftBodyDeform.ExternalForce"/> export is added on top of it.
 /// </summary>
 public static class SoftBodyEnvironment
